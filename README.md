@@ -1,5 +1,7 @@
 # SuperFishBros
 
+![Sketch](poc/SuperFishBros.png)
+
 A simple game for my daughter. 
 
 # References
