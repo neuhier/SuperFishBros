@@ -17,10 +17,15 @@ from pygame.locals import (
     QUIT,
 )
 
+# Define constants for the screen width and height
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 800
+
 # Load Images and scale
+background = pygame.image.load("imgs/backgrounds/pirateship.jpg")
+background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
 PlayerImage =  pygame.image.load("imgs/players/redfish.png")
 PlayerImage = pygame.transform.scale(PlayerImage, (104, 66))
-
 SalatImage = pygame.image.load("imgs/objects/collectables/meersalat.png")
 
 # Define a Player object by extending pygame.sprite.Sprite
@@ -29,7 +34,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
         self.surf = PlayerImage.convert()
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.surf.set_colorkey((0,0,0))
         self.rect = self.surf.get_rect()
     # Move the sprite based on user keypresses
     def update(self, pressed_keys):
@@ -57,6 +62,7 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
         self.surf = SalatImage.convert()
+        self.surf.set_colorkey((0,0,0))
         self.rect = self.surf.get_rect(
             center=(
                 random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
@@ -75,10 +81,6 @@ class Enemy(pygame.sprite.Sprite):
 
 # Initialize pygame
 pygame.init()
-
-# Define constants for the screen width and height
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 800
 
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
@@ -130,9 +132,9 @@ while running:
     # Update enemy position
     enemies.update()
 
-    # Fill the screen with white
-    screen.fill((0, 0, 0))
-    
+    # Background image
+    screen.blit(background, (0, 0))
+
     # Draw all sprites
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
