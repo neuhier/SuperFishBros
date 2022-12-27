@@ -21,6 +21,8 @@ from pygame.locals import (
 PlayerImage =  pygame.image.load("imgs/players/redfish.png")
 PlayerImage = pygame.transform.scale(PlayerImage, (104, 66))
 
+SalatImage = pygame.image.load("imgs/objects/collectables/meersalat.png")
+
 # Define a Player object by extending pygame.sprite.Sprite
 # The surface drawn on the screen is now an attribute of 'player'
 class Player(pygame.sprite.Sprite):
@@ -54,15 +56,14 @@ class Player(pygame.sprite.Sprite):
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         super(Enemy, self).__init__()
-        self.surf = pygame.Surface((50, 50))
-        self.surf.fill((255, 255, 255))
+        self.surf = SalatImage.convert()
         self.rect = self.surf.get_rect(
             center=(
                 random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
                 random.randint(0, SCREEN_HEIGHT),
             )
         )
-        self.speed = random.randint(5, 20)
+        self.speed = random.randint(1, 5)
 
     # Move the sprite based on speed
     # Remove the sprite when it passes the left edge of the screen
@@ -86,7 +87,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Create a custom event for adding a new enemy
 ADDENEMY = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDENEMY, 250)
+pygame.time.set_timer(ADDENEMY, 2500)
 
 # Instantiate player. Right now, this is just a rectangle.
 player = Player()
