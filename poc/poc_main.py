@@ -7,6 +7,7 @@ import random
 # Import pygame.locals for easier access to key coordinates
 # Updated to conform to flake8 and black standards
 from pygame.locals import (
+    RLEACCEL,
     K_UP,
     K_DOWN,
     K_LEFT,
@@ -16,13 +17,17 @@ from pygame.locals import (
     QUIT,
 )
 
+# Load Images and scale
+PlayerImage =  pygame.image.load("imgs/players/redfish.png")
+PlayerImage = pygame.transform.scale(PlayerImage, (104, 66))
+
 # Define a Player object by extending pygame.sprite.Sprite
 # The surface drawn on the screen is now an attribute of 'player'
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
-        self.surf = pygame.Surface((25, 25))
-        self.surf.fill((255, 100, 100))
+        self.surf = PlayerImage.convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
     # Move the sprite based on user keypresses
     def update(self, pressed_keys):
@@ -71,12 +76,13 @@ class Enemy(pygame.sprite.Sprite):
 pygame.init()
 
 # Define constants for the screen width and height
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1680
+SCREEN_HEIGHT = 1050
 
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+# screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 # Create a custom event for adding a new enemy
 ADDENEMY = pygame.USEREVENT + 1
@@ -129,5 +135,11 @@ while running:
         # Draw all sprites
         for entity in all_sprites:
             screen.blit(entity.surf, entity.rect)
+
+        # Check if any enemies have collided with the player
+        if pygame.sprite.spritecollideany(player, enemies):
+        # If so, then remove the player and stop the loop
+            player.kill()
+            running = False
 
         pygame.display.flip()
