@@ -76,17 +76,17 @@ class Enemy(pygame.sprite.Sprite):
 pygame.init()
 
 # Define constants for the screen width and height
-SCREEN_WIDTH = 1680
-SCREEN_HEIGHT = 1050
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 800
 
 # Create the screen object
 # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
-# screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+#screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 # Create a custom event for adding a new enemy
 ADDENEMY = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDENEMY, 1250)
+pygame.time.set_timer(ADDENEMY, 250)
 
 # Instantiate player. Right now, this is just a rectangle.
 player = Player()
@@ -120,26 +120,26 @@ while running:
         elif event.type == QUIT:
             running = False
         
-        # Get all the keys currently pressed
-        pressed_keys = pygame.key.get_pressed()
+    # Get all the keys currently pressed
+    pressed_keys = pygame.key.get_pressed()
 
-        # Update the player sprite based on user keypresses
-        player.update(pressed_keys)
-        
-        # Update enemy position
-        enemies.update()
+    # Update the player sprite based on user keypresses
+    player.update(pressed_keys)
+    
+    # Update enemy position
+    enemies.update()
 
-        # Fill the screen with white
-        screen.fill((0, 0, 0))
-        
-        # Draw all sprites
-        for entity in all_sprites:
-            screen.blit(entity.surf, entity.rect)
+    # Fill the screen with white
+    screen.fill((0, 0, 0))
+    
+    # Draw all sprites
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
 
-        # Check if any enemies have collided with the player
-        if pygame.sprite.spritecollideany(player, enemies):
-        # If so, then remove the player and stop the loop
-            player.kill()
-            running = False
+    # Check if any enemies have collided with the player
+    if pygame.sprite.spritecollideany(player, enemies):
+    # If so, then remove the player and stop the loop
+        player.kill()
+        running = False
 
-        pygame.display.flip()
+    pygame.display.flip()
