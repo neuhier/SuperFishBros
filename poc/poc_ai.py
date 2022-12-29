@@ -65,5 +65,3 @@ class DQNAgent(torch.nn.Module):
             getStateNearest(player, enemies, 3)
         ]
         return np.asarray(state)
-
-

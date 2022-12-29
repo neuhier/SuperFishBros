@@ -21,6 +21,10 @@ from pygame.locals import (
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 300
 
+#
+pygame.font.init()
+font = pygame.font.SysFont('Comic Sans MS', 30)
+
 # Load Images and scale
 background = pygame.image.load("imgs/backgrounds/pirateship.jpg")
 background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -34,6 +38,7 @@ SalatImage = pygame.transform.scale(SalatImage, (40, 30))
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
+        self.score = 0
         self.surf = PlayerImage.convert()
         self.surf.set_colorkey((0,0,0))
         self.rect = self.surf.get_rect()
@@ -143,10 +148,13 @@ while running:
         screen.blit(entity.surf, entity.rect)
 
     # Check if any enemies have collided with the player
-    if pygame.sprite.spritecollideany(player, enemies):
-    # If so, then remove the player and stop the loop
-        player.kill()
-        running = False
+    collected = pygame.sprite.spritecollideany(player, enemies)
+    if collected:
+        player.score += 1
+        collected.kill()
+
+    text_surface = font.render(str(player.score), False, (0, 0, 0))
+    screen.blit(text_surface, (0,0))
 
     pygame.display.flip()
     
