@@ -18,15 +18,16 @@ from pygame.locals import (
 )
 
 # Define constants for the screen width and height
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 800
+SCREEN_WIDTH = 400
+SCREEN_HEIGHT = 300
 
 # Load Images and scale
 background = pygame.image.load("imgs/backgrounds/pirateship.jpg")
 background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
 PlayerImage =  pygame.image.load("imgs/players/redfish.png")
-PlayerImage = pygame.transform.scale(PlayerImage, (104, 66))
+PlayerImage = pygame.transform.scale(PlayerImage, (64, 44))
 SalatImage = pygame.image.load("imgs/objects/collectables/meersalat.png")
+SalatImage = pygame.transform.scale(SalatImage, (40, 30))
 
 # Define a Player object by extending pygame.sprite.Sprite
 # The surface drawn on the screen is now an attribute of 'player'
@@ -78,7 +79,6 @@ class Enemy(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.kill()
 
-
 # Initialize pygame
 pygame.init()
 
@@ -100,6 +100,9 @@ player = Player()
 enemies = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
+
+# Setup the clock for a decent framerate
+clock = pygame.time.Clock()
 
 running = True
 
@@ -146,3 +149,6 @@ while running:
         running = False
 
     pygame.display.flip()
+    
+    # Ensure program maintains a rate of 30 frames per second
+    clock.tick(60)
