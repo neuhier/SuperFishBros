@@ -1,6 +1,6 @@
 import numpy as np
-import pandas as pd
-from sklearn.decomposition import PCA
+# import pandas as pd
+# from sklearn.decomposition import PCA
 from scipy.spatial.distance import cdist
 
 """ # Import the pygame module
@@ -100,7 +100,7 @@ npcs = 10 """
 # 
 # @param width, height Height and width of the screen.
 #
-def getState(player, enemnies, npcs, width, height):
+""" def getState(player, enemnies, npcs, width, height):
 
     # Make the "game state image"
     game_state_image = np.zeros((height, width))
@@ -120,10 +120,10 @@ def getState(player, enemnies, npcs, width, height):
     compressed = pca_model.fit_transform(game_state_df)
     return(compressed)
 
-
+ """
 # Get the position of the n nearest enemies
 def getStateNearest(player, enemies, n):
-    
+            
     # Get the coordinates of all enemies
     e_coords = np.zeros((len(enemies), 2))
     for i, e in enumerate(enemies):
@@ -134,5 +134,8 @@ def getStateNearest(player, enemies, n):
     distances = cdist([(player.rect.centerx,player.rect.centery)], e_coords).ravel()
 
     # get the n smallest enemies
-    indices = np.argpartition(distances, n)
-    return e_coords[indices[:n]].flatten()
+    if len(enemies) <= n:
+        return np.pad(e_coords.flatten(), (1, n), "constant", constant_values=0) # Fill with 0 # TODO: Use NA instead
+    else:
+        indices = np.argpartition(distances, n)
+        return e_coords[indices[:n]].flatten()

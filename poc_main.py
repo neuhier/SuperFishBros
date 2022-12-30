@@ -3,6 +3,7 @@
 # Import the pygame module
 import pygame
 import random
+from poc.poc_getState import getStateNearest
 
 # Import pygame.locals for easier access to key coordinates
 # Updated to conform to flake8 and black standards
@@ -21,7 +22,8 @@ from pygame.locals import (
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 300
 
-#
+game_length = 10*1000# in milliseconds
+
 pygame.font.init()
 font = pygame.font.SysFont('Comic Sans MS', 30)
 
@@ -94,7 +96,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Create a custom event for adding a new enemy
 ADDENEMY = pygame.USEREVENT + 1
-pygame.time.set_timer(ADDENEMY, 2500)
+pygame.time.set_timer(ADDENEMY, 1500)
 
 # Instantiate player. Right now, this is just a rectangle.
 player = Player()
@@ -113,6 +115,12 @@ running = True
 
 # Main loop
 while running:
+
+    print(getStateNearest(player, enemies, 3))
+
+    if pygame.time.get_ticks() >= game_length:
+        running = False
+
     # Look at every event in the queue
     for event in pygame.event.get():
         # Did the user hit a key?
