@@ -9,12 +9,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import copy
+from poc.poc_getState import *
+
 DEVICE = 'cpu' # 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class DQNAgent(torch.nn.Module):
     def __init__(self, params):
         super().__init__()
+        self.last_score = 0
         self.reward = 0
         self.gamma = 0.9 
         self.dataframe = pd.DataFrame()
@@ -35,7 +37,7 @@ class DQNAgent(torch.nn.Module):
 
     def network(self):
     # Layers
-        self.f1 = nn.Linear(11, self.first_layer)
+        self.f1 = nn.Linear(6, self.first_layer)
         self.f2 = nn.Linear(self.first_layer, self.second_layer)
         self.f3 = nn.Linear(self.second_layer, self.third_layer)
         self.f4 = nn.Linear(self.third_layer, 3)
@@ -51,17 +53,80 @@ class DQNAgent(torch.nn.Module):
         x = F.softmax(self.f4(x), dim=-1)
         return x
     
-    def get_state(self, game, player, food):
+    def get_state(self, player, enemies, n):
         """
         Return the state.
-        The state is a numpy array of 6 values, representing:
+        The state is a numpy array of n*2 values, representing:
             - x,y-Position of the agent/player
             - x,y-position of the closest food
             - x,y-position of the second closest food
         """
-        state = [
-            player.rect.centerx,
-            player.rect.centery,
-            getStateNearest(player, enemies, 3)
-        ]
+        state = np.concatenate(
+            (
+            np.array([
+                player.rect.centerx,
+                player.rect.centery]
+                ),
+            getStateNearest(player, enemies, n))
+            )
+
         return np.asarray(state)
+    
+    def set_reward(self, game):
+        # If the player increased the score -> get a reward
+        self.reward = 0
+        if game.score > self.last_score:
+            self.reward = game.score - self.last_score
+            self.last_score = game.score
+        return self.reward
+
+    def remember(self, state, action, reward, next_state):
+        """
+        Store the <state, action, reward, next_state, is_done> tuple in a 
+        memory buffer for replay memory.
+        """
+        self.memory.append((state, action, reward, next_state))
+    
+    def replay_new(self, memory, batch_size):
+        """
+        Replay memory.
+        """
+        if len(memory) > batch_size:
+            minibatch = random.sample(memory, batch_size)
+        else:  
+            minibatch = memory
+        for state, action, reward, next_state in minibatch:
+            self.train()
+            torch.set_grad_enabled(True)
+            target = reward
+            next_state_tensor = torch.tensor(np.expand_dims(next_state, 0), dtype=torch.float32).to(DEVICE)
+            state_tensor = torch.tensor(np.expand_dims(state, 0), dtype=torch.float32, requires_grad=True).to(DEVICE)
+            target = reward + self.gamma * torch.max(self.forward(next_state_tensor)[0])
+            output = self.forward(state_tensor)
+            target_f = output.clone()
+            target_f[0][np.argmax(action)] = target
+            target_f.detach()
+            self.optimizer.zero_grad()
+            loss = F.mse_loss(output, target_f)
+            loss.backward()
+            self.optimizer.step()
+
+    def train_short_memory(self, state, action, reward, next_state):
+        """
+        Train the DQN agent on the <state, action, reward, next_state, is_done>
+        tuple at the current timestep.
+        """
+        self.train()
+        torch.set_grad_enabled(True)
+        target = reward
+        next_state_tensor = torch.tensor(next_state.reshape((1, 6)), dtype=torch.float32).to(DEVICE)
+        state_tensor = torch.tensor(state.reshape((1, 6)), dtype=torch.float32, requires_grad=True).to(DEVICE)
+        target = reward + self.gamma * torch.max(self.forward(next_state_tensor[0]))
+        output = self.forward(state_tensor)
+        target_f = output.clone()
+        target_f[0][np.argmax(action)] = target
+        target_f.detach()
+        self.optimizer.zero_grad()
+        loss = F.mse_loss(output, target_f)
+        loss.backward()
+        self.optimizer.step()
