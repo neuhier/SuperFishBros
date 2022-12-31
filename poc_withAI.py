@@ -27,9 +27,9 @@ def define_parameters():
     params['batch_size'] = 1000
     # Settings
     params['weights_path'] = 'weights/weights.h5'
-    params['train'] = True
-    params["test"] = False
-    params['plot_score'] = False
+    params['train'] = False
+    params["test"] = True
+    params['plot_score'] = True
     params['log_path'] = 'logs/scores_' + str(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) +'.txt'
     return params
 
