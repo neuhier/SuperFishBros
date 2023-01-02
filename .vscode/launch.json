@@ -11,8 +11,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            "python.terminal.executeInFileDir": true 
+            "justMyCode": true
         }
     ]
 }

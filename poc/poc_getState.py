@@ -135,7 +135,7 @@ def getStateNearest(player, enemies, n):
 
     # get the n smallest enemies
     if len(enemies) <= n:
-        return np.pad(e_coords.flatten(), (1, n), "constant", constant_values=0) # Fill with 0 # TODO: Use NA instead
+        return np.pad(e_coords.flatten(), (n-len(enemies),), "constant", constant_values=0) # Fill with 0 # TODO: Use NA instead
     else:
         indices = np.argpartition(distances, n)
         return e_coords[indices[:n]].flatten()

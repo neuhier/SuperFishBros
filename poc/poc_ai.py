@@ -37,7 +37,7 @@ class DQNAgent(torch.nn.Module):
 
     def network(self):
     # Layers
-        self.f1 = nn.Linear(6, self.first_layer)
+        self.f1 = nn.Linear(8, self.first_layer)
         self.f2 = nn.Linear(self.first_layer, self.second_layer)
         self.f3 = nn.Linear(self.second_layer, self.third_layer)
         self.f4 = nn.Linear(self.third_layer, 3)
@@ -67,7 +67,7 @@ class DQNAgent(torch.nn.Module):
                 player.rect.centerx,
                 player.rect.centery]
                 ),
-            getStateNearest(player, enemies, n))
+                getStateNearest(player, enemies, n))
             )
 
         return np.asarray(state)
@@ -119,8 +119,8 @@ class DQNAgent(torch.nn.Module):
         self.train()
         torch.set_grad_enabled(True)
         target = reward
-        next_state_tensor = torch.tensor(next_state.reshape((1, 6)), dtype=torch.float32).to(DEVICE)
-        state_tensor = torch.tensor(state.reshape((1, 6)), dtype=torch.float32, requires_grad=True).to(DEVICE)
+        next_state_tensor = torch.tensor(next_state.reshape((1, 8)), dtype=torch.float32).to(DEVICE)
+        state_tensor = torch.tensor(state.reshape((1, 8)), dtype=torch.float32, requires_grad=True).to(DEVICE)
         target = reward + self.gamma * torch.max(self.forward(next_state_tensor[0]))
         output = self.forward(state_tensor)
         target_f = output.clone()

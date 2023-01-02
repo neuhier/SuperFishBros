@@ -22,7 +22,7 @@ def define_parameters():
     params['first_layer_size'] = 200    # neurons in the first layer
     params['second_layer_size'] = 20   # neurons in the second layer
     params['third_layer_size'] = 50    # neurons in the third layer
-    params['episodes'] = 250          
+    params['episodes'] = 1         
     params['memory_size'] = 2500
     params['batch_size'] = 1000
     # Settings
@@ -42,7 +42,7 @@ class Game:
         self.game_width = game_width
         self.game_height = game_height
         self.score = 0
-        self.gameDisplay = pygame.display.set_mode((game_width, game_height + 60))
+        self.display = pygame.display.set_mode((game_width, game_height + 60))
         self.bg = pygame.image.load("imgs/backgrounds/pirateship.jpg")
         self.running = True
         self.clock = pygame.time.Clock()
@@ -63,6 +63,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.surf.get_rect()
         
      def update(self, direction):
+
         if direction == "up":
             self.rect.move_ip(0, -5)
         if direction == "down":
@@ -86,6 +87,7 @@ class Food(pygame.sprite.Sprite):
         super(Food, self).__init__()
         SalatImage = pygame.image.load("imgs/objects/collectables/meersalat.png")
         SalatImage = pygame.transform.scale(SalatImage, (40, 30))
+        self.surf = SalatImage
         self.surf.set_colorkey((0,0,0))
         self.rect = self.surf.get_rect(
             center=(
@@ -107,25 +109,23 @@ def display_ui(game):
     myfont = pygame.font.SysFont('Segoe UI', 20)
     text_score = myfont.render('SCORE: ', True, (0, 0, 0))
     text_score_number = myfont.render(str(game.score), True, (0, 0, 0))
-    game.gameDisplay.blit(text_score, (45, 440))
-    game.gameDisplay.blit(text_score_number, (120, 440))
-    game.gameDisplay.blit(game.bg, (10, 10))
+    game.display.blit(game.bg, (10, 10))
+    game.display.blit(text_score, (45, 440))
+    game.display.blit(text_score_number, (120, 440))
+    for entity in game.all_sprites:
+        game.display.blit(entity.surf, entity.rect)
 
 def display(game):
-    game.gameDisplay.fill((255, 255, 255))
+    game.display.fill((255, 255, 255))
     display_ui(game)
     for entity in game.all_sprites:
-        game.gameDisplay.blit(entity.surf, entity.rect)
+        game.display.blit(entity.surf, entity.rect)
+    pygame.display.flip()
 
 def update_screen():
     pygame.display.update()
 
 def initialize_game(game, agent, batch_size):
-    
-    # Create a custom event for adding a new enemy
-    ADDENEMY = pygame.USEREVENT + 1
-    pygame.time.set_timer(ADDENEMY, 1500)
-
     state_init1 = agent.get_state(game.player, game.food, 3)
     action = "up"
     game.player.update(action)
@@ -143,12 +143,20 @@ def run(params):
     agent = DQNAgent(params)
     agent = agent.to(DEVICE)
     agent.optimizer = optim.Adam(agent.parameters(), weight_decay=0, lr=params['learning_rate'])
+    
     counter_games = 0
+
+    # Create a custom event for adding a new enemy
+    ADDENEMY = pygame.USEREVENT + 1
+    pygame.time.set_timer(ADDENEMY, 1500)
+
     while counter_games < params['episodes']:
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+           
         # Initialize classes
         game = Game(400, 300)
 
@@ -157,8 +165,19 @@ def run(params):
         if params['display']:
             display(game)
         
-        steps = 0       # steps since the last positive reward
-        while (game.running) and (steps < 100):
+        steps = 0 # steps since the last positive reward
+
+        while (game.running) and (steps < 1000):
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+                        
+                elif event.type == ADDENEMY:
+                    new_food = Food(game)
+                    game.food.add(new_food)
+                    game.all_sprites.add(new_food)
+
             if not params['train']:
                 agent.epsilon = 0.01
             else:
@@ -174,21 +193,24 @@ def run(params):
             else:
                 # predict action based on the old state
                 with torch.no_grad():
-                    state_old_tensor = torch.tensor(state_old.reshape((1, 6)), dtype=torch.float32).to(DEVICE)
+                    state_old_tensor = torch.tensor(state_old.reshape((1, 8)), dtype=torch.float32).to(DEVICE)
                     prediction = agent(state_old_tensor)
                     final_move = np.eye(3)[np.argmax(prediction.detach().cpu().numpy()[0])]
 
             # perform new move and get new state
             game.player.update(final_move)
+            game.food.update()
+            
+            collected = pygame.sprite.spritecollideany(game.player, game.food)
+            if collected:
+                game.score += 1
+                collected.kill()
+
             state_new = agent.get_state(game.player, game.food, 3)
 
             # set reward for the new state
             reward = agent.set_reward(game)
             
-            # if food is eaten, steps is set to 0
-            if reward > 0:
-                steps = 0
-                
             if params['train']:
                 # train short memory base on the new action and state
                 agent.train_short_memory(state_old, final_move, reward, state_new)
@@ -198,12 +220,16 @@ def run(params):
             if params['display']:
                 display(game)
                 pygame.time.wait(params['speed'])
+       
             steps+=1
+
         if params['train']:
             agent.replay_new(agent.memory, params['batch_size'])
         counter_games += 1
         # total_score += game.score
         print(f'Game {counter_games}      Score: {game.score}')
+
+
     if params['train']:
         model_weights = agent.state_dict()
         torch.save(model_weights, params["weights_path"])
@@ -220,9 +246,6 @@ if __name__ == '__main__':
     print("Args", args)
     params['display'] = args.display
     params['speed'] = args.speed
-    if args.bayesianopt:
-        bayesOpt = BayesianOptimizer(params)
-        bayesOpt.optimize_RL()
     if params['train']:
         print("Training...")
         params['load_weights'] = False   # when training, the network is not pre-trained
